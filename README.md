@@ -12,7 +12,7 @@
 
 `gonda` treats packages and channels as independent. `Package`s and `PackageVersion`s exist on their own, and may or may not be associated to any `Channel`. What is available in a given channel is defined through `ChannelBinding`s, which conntect `PackageVersion`s to `Channel`. This scheme has the advantage that we can easily change the content of a `Channel` by adjusting the bindings, without actually moving files around. It also means that one package can be available through multiple channels, but we still only need to keep one physical copy of the file.
 
-![Diagram showing the channel composition process](./docs/channel-composition.png)
+<img alt="Diagram showing the channel composition process" width="50%" src="./docs/channel-composition.png">
 
 ## Upload
 
@@ -21,7 +21,7 @@ New package versions are created by users through the upload of a conda package 
 
 File uploads require postprocessing for parsing and validation of the uploaded file. Therefore, the upload process is split into a short synchronous portion, and a subsequent asynchronous processing step. The folowing diagram illustrates the process.
 
-![Diagram showing the upload process](./docs/upload.png)
+<img alt="Diagram showing the upload process" width="50%" src="./docs/upload.png">
 
 1. The user sends a mime post request including the form file to be uploaded to the server.
 2. The server performs synchronous actions:
