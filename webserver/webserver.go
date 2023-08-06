@@ -6,34 +6,50 @@ import (
 	"path/filepath"
 	"regexp"
 
+	"github.com/AndreasAlbert/gonda/auth"
 	"github.com/AndreasAlbert/gonda/storage"
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 )
 
 type Server struct {
-	Store storage.FileStore
-	*gin.Engine
+	Store         storage.FileStore
+	Router        *gin.Engine
+	OAuthHandlers []auth.OAuthHandler
 }
 
-func NewServer(fs storage.FileStore, engine *gin.Engine) Server {
+func NewServer(fs storage.FileStore, engine *gin.Engine, oauthhandlers []auth.OAuthHandler) Server {
 	s := Server{
-		fs,
-		engine,
-	}
+		fs, engine, oauthhandlers}
+	store := cookie.NewStore([]byte("secret"))
+	s.Router.Use(sessions.Sessions("gondasession", store))
 
-	routes(s)
+	addRoutes(s)
 
 	return s
 }
-func routes(s Server) {
-	s.GET("/ping", s.HandlePing)
+
+func UserInfoHandler(ctx *gin.Context) {
+	// ctx.JSON(http.StatusOK, gin.H{"Hello": "from private"})
+
+	ctx.JSON(http.StatusOK, gin.H{"Hello": "from private", "user": ctx.MustGet("user")})
+}
+func addRoutes(s Server) {
+	for _, handler := range s.OAuthHandlers {
+		s.Router.GET(fmt.Sprintf("/oauth/%s/login", handler.Name), handler.HandleLogin)
+
+		s.Router.GET(fmt.Sprintf("/oauth/%s/callback", handler.Name), handler.HandleCallback)
+
+	}
+	s.Router.GET("/ping", s.HandlePing)
 
 	// s.GET("/packages", s.HandleGetPackages)
 	// s.POST("/packages", s.HandlePostPackages)
 	// s.GET("/packages/:name", s.HandleGetPackage)
 
 	// s.GET("/packages/:name/version/:version", s.HandleGetPackageVersion)
-	s.POST("/uploads", s.HandlePostUploads)
+	s.Router.POST("/uploads", s.HandlePostUploads)
 	// s.GET("/uploads/:id", s.HandleUploadGet)
 
 	// s.GET("/channels", s.HandleGetChannels)
@@ -41,10 +57,13 @@ func routes(s Server) {
 	// s.GET("/channels/:name", s.HandleGetChannel)
 
 }
+
 func (s Server) HandlePing(c *gin.Context) {
+	session := sessions.Default(c)
+	user := session.Get("user")
 	c.JSON(http.StatusOK, gin.H{
 		"message": "pong",
-	})
+		"user":    user})
 }
 
 func (s Server) HandlePostUploads(c *gin.Context) {
