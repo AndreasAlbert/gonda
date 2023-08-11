@@ -12,6 +12,8 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/glog"
@@ -26,7 +28,7 @@ type OAuthHandler struct {
 func randToken() string {
 	b := make([]byte, 32)
 	if _, err := rand.Read(b); err != nil {
-		glog.Fatalf("Failed to read rand: %v", err)
+		log.Fatal().Msg(fmt.Sprintf("Failed to read rand: %v", err))
 	}
 	return base64.StdEncoding.EncodeToString(b)
 }
