@@ -1,3 +1,7 @@
+/*
+Package auth implements authentication handling
+for the gonda web server.
+*/
 package auth
 
 import (
@@ -5,7 +9,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/gin-contrib/sessions"
@@ -22,7 +26,7 @@ type OAuthHandler struct {
 func randToken() string {
 	b := make([]byte, 32)
 	if _, err := rand.Read(b); err != nil {
-		glog.Fatalf("[Gin-OAuth] Failed to read rand: %v\n", err)
+		glog.Fatalf("Failed to read rand: %v", err)
 	}
 	return base64.StdEncoding.EncodeToString(b)
 }
@@ -66,7 +70,7 @@ func (h OAuthHandler) getUserData(code string) ([]byte, error) {
 		return nil, fmt.Errorf("failed getting user info: %s", err.Error())
 	}
 	defer response.Body.Close()
-	contents, err := ioutil.ReadAll(response.Body)
+	contents, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed read response: %s", err.Error())
 	}
