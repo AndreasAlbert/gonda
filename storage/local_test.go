@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 	"testing"
@@ -45,7 +45,7 @@ func TestLocalFileStore(t *testing.T) {
 
 	// Read it back
 	reader1, err := fs.Get(fname1)
-	buf, err := ioutil.ReadAll(reader1)
+	buf, err := io.ReadAll(reader1)
 	assert.Nil(t, err)
 	assert.Equal(t, buf, data1)
 
@@ -61,13 +61,13 @@ func TestLocalFileStore(t *testing.T) {
 
 	// Read it back
 	reader2, err := fs.Get(fname2)
-	buf, err = ioutil.ReadAll(reader2)
+	buf, err = io.ReadAll(reader2)
 	assert.Nil(t, err)
 	assert.Equal(t, buf, data2)
 
 	// Read the first file again, just to be sure
 	reader1, err = fs.Get(fname1)
-	buf, err = ioutil.ReadAll(reader1)
+	buf, err = io.ReadAll(reader1)
 	assert.Nil(t, err)
 	assert.Equal(t, buf, data1)
 
@@ -86,7 +86,7 @@ func TestLocalFileStore(t *testing.T) {
 
 	// Read back again, this time compare to data2
 	reader1, err = fs.Get(fname1)
-	buf, err = ioutil.ReadAll(reader1)
+	buf, err = io.ReadAll(reader1)
 	assert.Nil(t, err)
 	assert.Equal(t, buf, data2)
 }

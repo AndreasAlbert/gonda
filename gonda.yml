@@ -1,0 +1,8 @@
+server:
+    auth:
+        github:
+            enabled: true
+            client_id: ""
+            client_secret: ""
+            redirect_url: "http://localhost:8080/oauth/github/callback" 
+            user_url: "https://api.github.com/user"
