@@ -27,7 +27,9 @@ func getAuthHandlers() []auth.OAuthHandler {
 			ClientSecret: viper.GetString("server.auth.github.client_secret"),
 			Scopes:       []string{"read:user"},
 			Endpoint:     github.Endpoint,
-			RedirectURL:  viper.GetString("server.auth.github.redirect_url")}}
+			RedirectURL:  viper.GetString("server.auth.github.redirect_url")},
+		UserURL: viper.GetString("server.auth.github.user_url")}
+
 	handlers = append(handlers, handler)
 	return handlers
 }
