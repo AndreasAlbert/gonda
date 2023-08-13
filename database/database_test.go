@@ -3,7 +3,6 @@ package database
 import (
 	"testing"
 
-	"github.com/go-playground/assert/v2"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -59,7 +58,7 @@ func testUserUnique(t *testing.T, db *gorm.DB) {
 		Name:     "U2",
 	}
 	err := tx.Create(&user_3).Error
-	assert.NotNil(err)
+	assert.NotNil(t, err)
 }
 func testUser(t *testing.T, db *gorm.DB) {
 	t.Run(
