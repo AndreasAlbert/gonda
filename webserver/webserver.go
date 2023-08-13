@@ -22,18 +22,18 @@ type Server struct {
 func NewServer(fs storage.FileStore, engine *gin.Engine, oauthhandlers []auth.OAuthHandler) Server {
 	s := Server{
 		fs, engine, oauthhandlers}
-	store := cookie.NewStore([]byte("secret"))
-	s.Router.Use(sessions.Sessions("gondasession", store))
+	store := cookie.NewStore([]byte("kdjalskdjalskj"))
+	s.Router.Use(sessions.Sessions("gonda", store))
 
 	addRoutes(s)
 
 	return s
 }
 
-func UserInfoHandler(ctx *gin.Context) {
-	// ctx.JSON(http.StatusOK, gin.H{"Hello": "from private"})
-
-	ctx.JSON(http.StatusOK, gin.H{"Hello": "from private", "user": ctx.MustGet("user")})
+func (s Server) HandleWhoAmI(ctx *gin.Context) {
+	session := sessions.Default(ctx)
+	fmt.Printf("%v", session.Get("user_name"))
+	ctx.JSON(http.StatusOK, gin.H{"user_name": session.Get("user_name"), "user_provider": session.Get("user_provider"), "test": session.Get("test")})
 }
 func addRoutes(s Server) {
 	for _, handler := range s.OAuthHandlers {
@@ -56,6 +56,7 @@ func addRoutes(s Server) {
 	// s.POST("/channels", s.HandlePostChannels)
 	// s.GET("/channels/:name", s.HandleGetChannel)
 
+	s.Router.GET("/me", s.HandleWhoAmI)
 }
 
 func (s Server) HandlePing(c *gin.Context) {

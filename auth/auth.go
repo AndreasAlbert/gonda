@@ -60,12 +60,15 @@ func (h OAuthHandler) HandleCallback(ctx *gin.Context) {
 	code := ctx.Query("code")
 	user_data, err := h.getUserData(code)
 	if err != nil {
-		ctx.JSON(401, "")
+		ctx.JSON(401, "Failed to get user data")
+		return
 	}
 	session := sessions.Default(ctx)
-	session.Set("user_data", user_data)
+	session.Set("user_name", user_data["name"])
+	session.Set("user_provider", user_data["provider"])
 	session.Save()
-	ctx.JSON(200, user_data)
+
+	ctx.JSON(200, gin.H{"data": user_data})
 }
 
 // getUserData retrieves information about the user from the oauth provider
