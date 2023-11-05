@@ -8,7 +8,12 @@ import (
 	"strings"
 
 	"github.com/AndreasAlbert/gonda/auth"
-	"github.com/AndreasAlbert/gonda/storage"
+	fstore "github.com/AndreasAlbert/gonda/storage/files"
+	ustore "github.com/AndreasAlbert/gonda/users/files"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+
 	"github.com/AndreasAlbert/gonda/webserver"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
@@ -58,15 +63,22 @@ func main() {
 		panic(fmt.Errorf("fatal error config file: %w", err))
 	}
 	// Dependency: File storage
-	store, fileStoreErr := storage.NewLocalFileStore("/tmp/gonda/")
+	fstore, fileStoreErr := fstore.NewLocalFileStore("/tmp/gonda/")
 	if fileStoreErr != nil {
 		panic(fileStoreErr)
 	}
 
+	// Set up DB and User Store
+	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Silent)})
+	if err != nil {
+		panic(err)
+	}
+	ustore, uStoreErr := ustore.NewDBUserStore(db)
 	router := gin.Default()
 
 	s := webserver.NewServer(
-		store, router, getAuthHandlers(v.Sub("server.auth")))
+		fstore, ustore, router, getAuthHandlers(v.Sub("server.auth")))
 
 	s.Router.Run()
 }

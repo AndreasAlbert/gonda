@@ -7,21 +7,23 @@ import (
 	"regexp"
 
 	"github.com/AndreasAlbert/gonda/auth"
-	"github.com/AndreasAlbert/gonda/storage"
+	fstore "github.com/AndreasAlbert/gonda/storage/files"
+	ustore "github.com/AndreasAlbert/gonda/storage/users"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 )
 
 type Server struct {
-	Store         storage.FileStore
+	FileStore     fstore.FileStore
+	UserStore     ustore.UserStore
 	Router        *gin.Engine
 	OAuthHandlers []auth.OAuthHandler
 }
 
-func NewServer(fs storage.FileStore, engine *gin.Engine, oauthhandlers []auth.OAuthHandler) Server {
+func NewServer(fs fstore.FileStore, us ustore.UserStore, engine *gin.Engine, oauthhandlers []auth.OAuthHandler) Server {
 	s := Server{
-		fs, engine, oauthhandlers}
+		fs, us, engine, oauthhandlers}
 	store := cookie.NewStore([]byte("kdjalskdjalskj"))
 	s.Router.Use(sessions.Sessions("gonda", store))
 
@@ -88,7 +90,7 @@ func (s Server) HandlePostUploads(c *gin.Context) {
 	}
 
 	tmpname := filepath.Join("_upload/", file.Filename)
-	putError := s.Store.Put(tmpname, f, false)
+	putError := s.FileStore.Put(tmpname, f, false)
 	if putError != nil {
 		c.String(http.StatusConflict, fmt.Sprintf("File exists."))
 		return
