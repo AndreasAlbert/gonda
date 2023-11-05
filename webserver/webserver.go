@@ -37,6 +37,44 @@ func (s Server) HandleWhoAmI(ctx *gin.Context) {
 	fmt.Printf("%v", session.Get("user_name"))
 	ctx.JSON(http.StatusOK, gin.H{"user_name": session.Get("user_name"), "user_provider": session.Get("user_provider"), "test": session.Get("test")})
 }
+func not_logged_in_error(ctx *gin.Context) {
+	ctx.JSON(http.StatusForbidden, gin.H{"reason": "Not logged in."})
+}
+func middleware_authenticated(s Server) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+
+		// Case 1: User already present in session
+		session := sessions.Default(ctx)
+		user := session.Get("user")
+		if user != nil {
+			return
+		}
+
+		// Case 2: User has logged in through oauth,
+		// but user object not pulled from store yet
+		user_provider := session.Get("user_provider")
+		user_name := session.Get("user_name")
+		if (user_provider == nil) || (user_name == nil) {
+			not_logged_in_error(ctx)
+			return
+		}
+		user, err := s.UserStore.RetrieveUser(user_provider.(string), user_name.(string))
+		if err != nil {
+			not_logged_in_error(ctx)
+			return
+		}
+
+		// Case 3: User has logged in through oauth,
+		// but user object not pulled from store yet
+
+		user, err = s.UserStore.CreateUser(user_provider.(string), user_name.(string))
+		session.Set("user", user)
+		session.Save()
+
+		ctx.Next()
+
+	}
+}
 func addRoutes(s Server) {
 
 	// Unauthenticated server basics
@@ -52,12 +90,18 @@ func addRoutes(s Server) {
 		}
 	}
 
+	group_authenticated := s.Router.Group("/", middleware_authenticated(s))
+	{
+		group_authenticated.POST("/uploads", s.HandlePostUploads)
+		group_authenticated.GET("/authping", s.HandlePing)
+
+	}
 	// s.GET("/packages", s.HandleGetPackages)
 	// s.POST("/packages", s.HandlePostPackages)
 	// s.GET("/packages/:name", s.HandleGetPackage)
 
 	// s.GET("/packages/:name/version/:version", s.HandleGetPackageVersion)
-	s.Router.POST("/uploads", s.HandlePostUploads)
+	// s.Router
 	// s.GET("/uploads/:id", s.HandleUploadGet)
 
 	// s.GET("/channels", s.HandleGetChannels)
