@@ -9,7 +9,7 @@ import (
 
 	"github.com/AndreasAlbert/gonda/auth"
 	fstore "github.com/AndreasAlbert/gonda/storage/files"
-	ustore "github.com/AndreasAlbert/gonda/users/files"
+	ustore "github.com/AndreasAlbert/gonda/storage/users"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -75,6 +75,9 @@ func main() {
 		panic(err)
 	}
 	ustore, uStoreErr := ustore.NewDBUserStore(db)
+	if uStoreErr != nil {
+		panic(uStoreErr)
+	}
 	router := gin.Default()
 
 	s := webserver.NewServer(

@@ -38,13 +38,19 @@ func (s Server) HandleWhoAmI(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"user_name": session.Get("user_name"), "user_provider": session.Get("user_provider"), "test": session.Get("test")})
 }
 func addRoutes(s Server) {
-	for _, handler := range s.OAuthHandlers {
-		s.Router.GET(fmt.Sprintf("/oauth/%s/login", handler.Name), handler.HandleLogin)
 
-		s.Router.GET(fmt.Sprintf("/oauth/%s/callback", handler.Name), handler.HandleCallback)
-
-	}
+	// Unauthenticated server basics
 	s.Router.GET("/ping", s.HandlePing)
+
+	// OAuth routes
+	group_oauth := s.Router.Group("/oauth")
+	{
+		for _, handler := range s.OAuthHandlers {
+			group := group_oauth.Group(fmt.Sprintf("/%s", handler.Name))
+			group.GET("/login", handler.HandleLogin)
+			group.GET("/callback", handler.HandleCallback)
+		}
+	}
 
 	// s.GET("/packages", s.HandleGetPackages)
 	// s.POST("/packages", s.HandlePostPackages)
