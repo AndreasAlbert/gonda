@@ -5,8 +5,7 @@ go 1.20
 require (
 	github.com/gin-contrib/sessions v0.0.5
 	github.com/gin-gonic/gin v1.9.1
-	github.com/go-playground/assert/v2 v2.2.0
-	github.com/golang/glog v1.0.0
+	github.com/klauspost/compress v1.13.6
 	github.com/spf13/viper v1.16.0
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/oauth2 v0.7.0

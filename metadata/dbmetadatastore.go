@@ -15,8 +15,15 @@ type DBFileUpload struct {
 
 type DBMetaDataStore struct {
 	db *gorm.DB
-
 	MetaDataStore
+}
+
+func NewDBMetaDataStore(db *gorm.DB) (DBMetaDataStore, error) {
+	err := db.AutoMigrate(&DBFileUpload{})
+	if err != nil {
+		return DBMetaDataStore{}, err
+	}
+	return DBMetaDataStore{db: db}, nil
 }
 
 func (mstore DBMetaDataStore) CreateFileUpload(FileName string, UploadTime time.Time) error {
