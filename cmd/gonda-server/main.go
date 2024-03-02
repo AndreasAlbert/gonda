@@ -8,10 +8,13 @@ import (
 	"strings"
 
 	"github.com/AndreasAlbert/gonda/auth"
+	"github.com/AndreasAlbert/gonda/metadata"
 	"github.com/AndreasAlbert/gonda/storage"
 	"github.com/AndreasAlbert/gonda/webserver"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
@@ -64,9 +67,16 @@ func main() {
 	}
 
 	router := gin.Default()
-
+	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
+	if err != nil {
+		panic(err)
+	}
+	mstore, err := metadata.NewDBMetaDataStore(db)
+	if err != nil {
+		panic(err)
+	}
 	s := webserver.NewServer(
-		store, router, getAuthHandlers(v.Sub("server.auth")))
+		store, mstore, router, getAuthHandlers(v.Sub("server.auth")))
 
 	s.Router.Run()
 }

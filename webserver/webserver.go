@@ -5,8 +5,10 @@ import (
 	"net/http"
 	"path/filepath"
 	"regexp"
+	"time"
 
 	"github.com/AndreasAlbert/gonda/auth"
+	"github.com/AndreasAlbert/gonda/metadata"
 	"github.com/AndreasAlbert/gonda/storage"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
@@ -14,14 +16,18 @@ import (
 )
 
 type Server struct {
-	Store         storage.FileStore
-	Router        *gin.Engine
-	OAuthHandlers []auth.OAuthHandler
+	Store  storage.FileStore
+	Meta   metadata.MetaDataStore
+	Router *gin.Engine
+	// OAuthHandlers []auth.OAuthHandler
 }
 
-func NewServer(fs storage.FileStore, engine *gin.Engine, oauthhandlers []auth.OAuthHandler) Server {
+func NewServer(fs storage.FileStore, mstore metadata.MetaDataStore, engine *gin.Engine, oauthhandlers []auth.OAuthHandler) Server {
 	s := Server{
-		fs, engine, oauthhandlers}
+		Store:  fs,
+		Meta:   mstore,
+		Router: engine,
+	}
 	store := cookie.NewStore([]byte("kdjalskdjalskj"))
 	s.Router.Use(sessions.Sessions("gonda", store))
 
@@ -36,12 +42,12 @@ func (s Server) HandleWhoAmI(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"user_name": session.Get("user_name"), "user_provider": session.Get("user_provider"), "test": session.Get("test")})
 }
 func addRoutes(s Server) {
-	for _, handler := range s.OAuthHandlers {
-		s.Router.GET(fmt.Sprintf("/oauth/%s/login", handler.Name), handler.HandleLogin)
+	// for _, handler := range s.OAuthHandlers {
+	// 	s.Router.GET(fmt.Sprintf("/oauth/%s/login", handler.Name), handler.HandleLogin)
 
-		s.Router.GET(fmt.Sprintf("/oauth/%s/callback", handler.Name), handler.HandleCallback)
+	// 	s.Router.GET(fmt.Sprintf("/oauth/%s/callback", handler.Name), handler.HandleCallback)
 
-	}
+	// }
 	s.Router.GET("/ping", s.HandlePing)
 
 	// s.GET("/packages", s.HandleGetPackages)
@@ -94,8 +100,9 @@ func (s Server) HandlePostUploads(c *gin.Context) {
 		return
 	}
 
-	// TODO: Create pending Upload record in DB
-
-	// Send response
+	dbError := s.Meta.CreateFileUpload(file.Filename, time.Now().UTC())
+	if dbError != nil {
+		c.String(http.StatusInternalServerError, fmt.Sprintf("Failed to register file upload in data base."))
+	}
 	c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
 }
